@@ -9,16 +9,29 @@
 
     <context:property-placeholder location="musicPlayer.properties"/>
 
-    <bean id="musicBean"
-          class="com.bmolc.music.ClassicalMusic">
+<!--    <bean id="musicBean"-->
+<!--          class="com.bmolc.music.ClassicalMusic"-->
+<!--        init-method="initMethod"-->
+<!--        destroy-method="destroyMethod">-->
+<!--    </bean>-->
+
+    <bean id="classicalMusicPrototype"
+          class="com.bmolc.music.ClassicalMusic"
+          scope="prototype"
+          init-method="initMethod"
+          destroy-method="destroyMethod">
     </bean>
 
-    <bean id="musicPlayer"
-            class="com.bmolc.music.MusicPlayer"
-            scope="prototype">
-        <property name="music" ref="musicBean"/>
-
-        <property name="name" value="${musicPlayer.name}"/>
-        <property name="volume" value="${musicPlayer.volume}"/>
+    <bean id="neoClassicalMusic"
+          class="com.bmolc.music.NeoClassicalMusic"
+          factory-method="getNeoClassicalMusic">
     </bean>
+<!--    <bean id="musicPlayer"-->
+<!--            class="com.bmolc.music.MusicPlayer"-->
+<!--            scope="prototype">-->
+<!--        <property name="music" ref="musicBean"/>-->
+
+<!--        <property name="name" value="${musicPlayer.name}"/>-->
+<!--        <property name="volume" value="${musicPlayer.volume}"/>-->
+<!--    </bean>-->
 </beans>
