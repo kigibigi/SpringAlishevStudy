@@ -9,15 +9,42 @@
 
     <context:property-placeholder location="musicPlayer.properties"/>
 
+<!--    общийй бин-->
     <bean id="musicBean"
+          class="com.bmolc.music.RockMusic">
+    </bean>
+
+<!--    бины по жанрам-->
+    <bean id="classicalMusic"
           class="com.bmolc.music.ClassicalMusic">
     </bean>
 
-    <bean id="musicPlayer"
-            class="com.bmolc.music.MusicPlayer">
+    <bean id="rockMusic"
+          class="com.bmolc.music.RockMusic">
+    </bean>
+
+    <bean id="popMusic"
+          class="com.bmolc.music.PopMusic">
+    </bean>
+
+<!--    бин плеера одной песни-->
+    <bean id="musicOnePlayer"
+            class="com.bmolc.music.MusicOnePlayer">
         <property name="music" ref="musicBean"/>
 
         <property name="name" value="${musicPlayer.name}"/>
         <property name="volume" value="${musicPlayer.volume}"/>
+    </bean>
+
+<!--    бин для плеера разных жанров-->
+    <bean id="musicPlayer"
+          class="com.bmolc.music.MusicPlayer">
+        <constructor-arg>
+            <list>
+                <ref bean="classicalMusic" />
+                <ref bean="rockMusic" />
+                <ref bean="popMusic" />
+            </list>
+        </constructor-arg>
     </bean>
 </beans>
