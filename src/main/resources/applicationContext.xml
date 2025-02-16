@@ -11,4 +11,8 @@
           class="com.bmolc.music.RockMusic">
     </bean>
 
+    <bean id="musicPlayer"
+            class="com.bmolc.music.MusicPlayer">
+        <constructor-arg ref="musicBean"/>
+    </bean>
 </beans>
