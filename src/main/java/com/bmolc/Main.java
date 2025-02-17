@@ -1,5 +1,6 @@
 package com.bmolc;
 
+import com.bmolc.music.Computer;
 import com.bmolc.music.Music;
 import com.bmolc.music.MusicPlayer;
 import com.bmolc.music.RockMusic;
@@ -10,15 +11,18 @@ public class Main {
         ClassPathXmlApplicationContext context =
                 new ClassPathXmlApplicationContext("applicationContext.xml");
 
-        Music music = context.getBean("musicBean", Music.class);
-        MusicPlayer musicPlayer = new MusicPlayer(music);
+//        Music music = context.getBean("musicBean", Music.class);
+//        MusicPlayer musicPlayer = new MusicPlayer(music);
+//
+//        musicPlayer.playMusic();
 
+        MusicPlayer musicPlayer = context.getBean(MusicPlayer.class);
         musicPlayer.playMusic();
+        System.out.println();
 
-//        доп.пример с роком
-        Music rockMusic = context.getBean(RockMusic.class);
-        MusicPlayer musicPlayerRock = new MusicPlayer(rockMusic);
-        musicPlayerRock.playMusic();
+        Computer computer = context.getBean(Computer.class);
+        System.out.println(computer);
 
+        context.close();
     }
 }
