@@ -1,6 +1,8 @@
 package com.bmolc;
 
 import com.bmolc.music.Music;
+import com.bmolc.music.MusicPlayer;
+import com.bmolc.music.RockMusic;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 public class Main {
@@ -9,7 +11,14 @@ public class Main {
                 new ClassPathXmlApplicationContext("applicationContext.xml");
 
         Music music = context.getBean("musicBean", Music.class);
+        MusicPlayer musicPlayer = new MusicPlayer(music);
 
-        System.out.println(music.getSong());
+        musicPlayer.playMusic();
+
+//        доп.пример с роком
+        Music rockMusic = context.getBean(RockMusic.class);
+        MusicPlayer musicPlayerRock = new MusicPlayer(rockMusic);
+        musicPlayerRock.playMusic();
+
     }
 }
