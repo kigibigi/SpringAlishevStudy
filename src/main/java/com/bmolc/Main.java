@@ -11,14 +11,9 @@ public class Main {
         ClassPathXmlApplicationContext context =
                 new ClassPathXmlApplicationContext("applicationContext.xml");
 
-//        Music music = context.getBean("musicBean", Music.class);
-//        MusicPlayer musicPlayer = new MusicPlayer(music);
-//
+//        MusicPlayer musicPlayer = context.getBean(MusicPlayer.class);
 //        musicPlayer.playMusic();
-
-        MusicPlayer musicPlayer = context.getBean(MusicPlayer.class);
-        musicPlayer.playMusic();
-        System.out.println();
+//        System.out.println();
 
         Computer computer = context.getBean(Computer.class);
         System.out.println(computer);
