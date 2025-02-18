@@ -1,0 +1,583 @@
+Урок 1ый вводный.______________________
+
+Основный компоненты SpringFramework
+	-Контекст прилоения (Application Context) и Внедрение зависимостей (Dependency Injection)
+	-удобный и эффективный доступ к БД (замена JDBC)
+	-Компонент для разработки Web -приложений на Java (Spring MVC)
+	-и множество других
+
+Приложение Java сосотит из набора объектов которые друг на друга ссылаются, ссылка и есть зависимость. Чем больше становится
+больше приложение тем больше становится зависимостей. 
+Когда объектов становится много, вручную создавать их становится всё сложнее и сложнее и на помощь приходит Spring с ApplicationContext и Dependency Injection.
+
+Т.е. мы уходим от Person person = new Person(). для каждого объекта не говоря о том что они могут ссылаться.
+
+Часто один объект необходимо создать в одном экземпляре а все остальные будут его испольльзовать
+(пример Database -> class User, class Util, class DAOUser....), проблема реашется паттерном Singlton, но можно и спрингом.
+
+Так же спринг дает удобный и эффетиный доступ к БД уходя от примитивного и низкоуровневого прописания JDBC.
+
+И springMVC для создания web приложений
+
+
+Урок 2ой. первре спринг приложение________________
+
+Он делал приложение через мавен, апликатион контекст делал через xml.
+
+Главное то что в applicationContext прописываются все бины(создаваемые объекты классов, только через спринг), а чтобы эти бины вытаскивать по необходимости
+нужно в классе в котором доставать вызвать
+	ApplicationContext context = new ApplicationContext(ссылочный файл);
+	и класс созданный выше(контекст) может выглядеть по разному в зависимости от того как был прописан сам контекст, xml-файлом или java классом.
+
+а после достаем бин класса из контекста. 
+	context.getBean("person", Person.class);
+bean и описание объекта на который он ссылается прописывается в контексте.
+
+
+Урок 4ый____(IoC)
+создал "музыку". (первый коммит).
+
+Для того чтобы не плодить кучу классов и не обращаться к каждому отдельно во 1ых был создан отдельный интерфейс Music, а каждый отдельный жанр музыки в плеер
+будет подключаться через интерфейс.
+
+В случае без использования спринга если необходимо поменять жанр, то
+Music music = new ClassicalMusic(); -> Music music = new ClassicalMusic();
+
+т.е. приходится лезть в код и вносить изменения.
+
+спринг предлагает "инверсию управления". т.е. создание объекта делегируется спрингу(бин), который оперируя applicationContext'ом
+сам подставит нужный объект. А для изменения жанра нужно в контексте изменить класс в бине
+
+    <bean id="musicBean"
+          class="com.bmolc.music.RockMusic">
+    </bean>
+			->
+
+	<bean id="musicBean"
+          class="com.bmolc.music.ClassicalMusic">
+    	</bean> 
+
+не меняя ничего в коде.
+
+Сам мейн не изменится
+
+        ClassPathXmlApplicationContext context =
+                new ClassPathXmlApplicationContext("applicationContext.xml");
+
+        Music music = context.getBean("musicBean", Music.class);
+
+        System.out.println(music.getSong());
+
+
+Урок 5ый.___(DI - Dependency Injection(Внедрение зависимостей))
+
+Если занятием ранне, зависимости теперь стали подключаться не изменением создающегося объекта(new ClassicalMusic() -> new RockMusic()).
+То MusicPlayer с контруктором принимающим интерфейс Music все так же создается вручную.
+Спринг предлагает создавать внедрять(создавать) зависимости через него, посредством конструкторов, сеттеров, аннотаций или возможна автоматизаци процесса(Autowiring).
+
+Типичные шаги в раблте со Spring:
+	- Создание Java - классов(будущие бины)
+	- Создание и связывание бинов с помощью Spring (аннотации, XML или Java код)
+	- При использовании, все объекты(бины) берутся из окнтейнера Spring).
+
+и так добавив bean в xml 
+	<bean id="musicPlayer"
+            	class="com.bmolc.music.MusicPlayer">
+        	<constructor-arg ref="musicBean"/>
+    	</bean>
+
+внедрение зависимости здесь происходит через конструктор
+	<constructor-arg ref="musicBean"/> здесь я уложил другой бин, как параметр для этого бина.
+а точнее внедрена ссылка(зависимость) на другой бин.
+и по итогу конечный запрос в main сократиться 
+
+        Music music = context.getBean("musicBean", Music.class);
+        MusicPlayer musicPlayer = new MusicPlayer(music);
+--->
+	MusicPlayer musicPlayer = context.getBean("musicPlayer", MusicPlayer.class);
+
+т.е. я теперь не укладываю music в плеер а отдал это на откуп спринг. и опять же если необходимо ввести изменение по музыке в плеере, то как в уроке ранне
+просто меняю в бине musicBean класс в пути!
+
+
+
+Урок 6ой___(DI часть 2, DI через сеттер, и вставка значений через внешние(properties) файлы)
+
+Уроком раннее внедрение зависимости происходило через конструктор, теперь я включу зависимостть через set'ер.
+
+Для этого добавил сеттер в MusicPlayer и пустой конструктор, иначе бин не отработает, т.к. сперва будет создаваться
+объект, а потом через сеттер устанавливаться значение.
+
+уже в самом xml файле в бине musicPlayer произойдет изменение в одной строчке, указывающей что внедрение зависимости
+будет уже через set'ер, а не через конструктор
+
+	<bean id="musicPlayer"
+            	class="com.bmolc.music.MusicPlayer">
+        	<constructor-arg ref="musicBean"/>
+    	</bean>
+---->
+
+    <bean id="musicPlayer"
+            class="com.bmolc.music.MusicPlayer">
+        <property name="music" ref="musicBean"/>
+    </bean>
+
+в name был указан music т.к. Spring  умеет пробегаться по Java файлу и найдя setMusic опеределяет метод set. по скольку
+классы прописываются по конвенции, и он отметает set, а Music переведт -> music.
+
+Так же в настройку бина можно укладывать не только ссылки на другие объекты, но и устанавливать значения.
+К примеру в MusicPlaer добавляю два поля
+    private String name;
+    private int volume;
+и сеттеры и геттеры к ним.
+
+уже в applicationContext в бине musicPlayer добвляю пару строк, и конечныо бин выглядит так
+
+    <bean id="musicPlayer"
+            class="com.bmolc.music.MusicPlayer">
+        <property name="music" ref="musicBean"/>
+
+        <property name="name" value="Some name"/>
+        <property name="volume" value="50"/>
+    </bean>
+
+!!!но можно уйти от внедрения вручную, а можно импортировать эти значения внешним файлом.
+
+создаю musicPlayer.properties файл (properties(англ. - свойство)). в нем указываются ключ значения. 
+там я и прописал значения к полям
+	musicPlayer.name = Some name
+	musicPlayer.volume = 70
+
+дальше нужно указать ссылку на на properties в applicationContext. делает это через строчку 
+
+	<context:property-placeholder location="musicPlayer.properties"/>
+
+где location - указание местоположения.
+а уже в бине через синтаксис ${} передаются значения из файла. и теперь уже нет необходимости лезть через настройки.
+
+       <property name="name" value="${musicPlayer.name}"/>
+       <property name="volume" value="${musicPlayer.volume}"/>
+
+
+__Урок 6.задача с проигрыванием плеера.
+
+добавил бин каждому классу. для плеера через конструктор добавлены зависимости в список.
+выглядит это: 
+
+    <bean id="musicPlayer"
+          class="com.bmolc.music.MusicPlayer">
+        <constructor-arg>
+            <list>
+                <ref bean="classicalMusic" />
+                <ref bean="rockMusic" />
+                <ref bean="popMusic" />
+            </list>
+        </constructor-arg>
+    </bean>
+
+
+
+
+________Урок 7. Scope_________________
+
+добавив надстройку scope к бину, мы можем регулировать его создание.
+(эту задачу делал уже в Кате)
+
+по умолчанию стоит "singleton" и его можно не указывать, на что будет жаловаться java если его указать.
+Это означает что при создании нового бина все они будут ссылаться на один и тот же объект.
+т.е. их ссылки будут равны, хэш'ы будут равны, изменения состояния в одной ссылке приведут к изменению в другой.
+!Важно. Бин и объект будет создан даже если сам бин не вызывался.
+
+другой типовой параметр в scope - "protorype".
+он уже противоположен предыдущему, и будет каждый раз создаваться новый объект по ссылке.
+!Выжно. Если бин не вызывается, то он и не будет создат(ленивая инициализация).
+
+т.е.
+	firstPlayer = context.getBean("musicPlayer", MusicPlayer.class);
+	secondPlayer = context.getBean("musicPlayer", MusicPlayer.class);
+	
+	boolean x = firstPlayer == secondPlayer;
+	-> x = false;
+		(до этого был true);
+
+и в бине scope прописывается след. образом:
+    <bean id="musicPlayer"
+            class="com.bmolc.music.MusicPlayer"
+            scope="prototype">
+        <property name="music" ref="musicBean"/>
+
+        <property name="name" value="${musicPlayer.name}"/>
+        <property name="volume" value="${musicPlayer.volume}"/>
+    </bean>
+
+
+
+
+________Урок 8. Жизненный цикл бина, Init, Destroy и Factory method_______
+
+Жизненный цикл бина следующий:
+1. Запусе Spring приложения(я его запускаю)
+2. Запускаются контейнеры(на осонове applicationContext.xml в моем случае)
+3. Создание бинов
+4. Внедрение зависимостей в бины
+5. - Вызов указанного init метода
+6. Бин готов к использованию
+	использование бина
+7. Вызов указанного destroy метода
+8. Останова Spring приложения.
+
+Init метод вызывается при инициализации бина. 
+	К примеру это может быть инициализация ресурсов, обращение к внешним файлам,
+	запуск БД.
+Destroy метод запускает в ходе уничтожения бина.
+	Очищения ресурсов, закрытие потока ввода-вывода,
+	закрытие доступа к БД.
+
+В инструкции к бину прописывается
+    <bean id="musicBean"
+          class="com.bmolc.music.ClassicalMusic"
+        init-method="initMethod"
+        destroy-method="destroyMethod">
+    </bean>
+где в кавычках названия этих методов.
+
+Тонкости по методам следующие
+	- модификатор доступа может быть любым
+	- тип возвращаемого значения может тожы быть любым(но обычно void т.к. нет возможности его получить)
+	- название может быть любым
+	- на вход метода не должны приниматься какие либо аргументы(значения)
+	
+	-для бинов со scope "prototype" не вызывается destroy метод. Spring отдает prototype бины и больше о них не заботится.
+	 (у меня на 3 объекта от одного бина вызвалось 3 инит метода, но только 1 destroy.
+	 (разобрался это от старого бина, который singleton, и который создается даже если его не вызывать, отрабатывал именно он,
+		destroy действительно не вызывается у prototype бинов)
+
+______factory-method
+Фабричный метода - это паттерн программирования, который предлагает создавать объекты, не используя оператор new,  а через вызов
+фабричного метода. Объекты будут все равно создавать через new(), но делать это будет фабричный метод.
+(в java для этого приватиться конструктор, и новые объекты создаются через статичный метод)
+
+Внешне при работе с бином никак не отразилось, как был создан объект. Инит и дестрой тоже были вызваны.
+
+И ещё тонкость, если используется фабричный метод создания объекта, а скоп бина синглтон, то все равно будет ссылка на один общий объект.(singlton win!)
+
+
+
+_______Урок 9___IoC в анотациях(с указанием пути в xml)_____
+
+Откатился на 4ый урок(коммит). Теперь для того чтобы создавать бины, не нужно прописывать их в xml файле.
+Теперь достаточно к классу, из которого нужно получить бин добавить аннотацию @Component, в скобках можно 
+указать название бина(id, по умолчанию будет название калсса с маленькой буквы).
+И указать путь в xml файле чтобы он просканировал дирректорию на наличие аннотации @Component и создал по ней бины.
+
+    <context:component-scan base-package="com.bmolc.music"/>
+
+это всё что нужно указать в xml, бины писать не нужно.
+
+@Component("musicBean")
+public class ClassicalMusic implements Music {
+    @Override
+    public String getSong() {
+        return "Symphony 7";
+    }
+}
+
+а вот аннотация. и код отработал как и на 4ом уроке. (в параметрах указал старый бин чтобы не переделывать код в майне.
+
+Дополнительно в примере ещё написал @Component к рок музыке. в мэйне код выглядел
+->
+        Music rockMusic = context.getBean(RockMusic.class);
+        MusicPlayer musicPlayerRock = new MusicPlayer(rockMusic);
+        musicPlayerRock.playMusic();
+
+
+
+______Урок 10_____DI уже в анотациях!
+
+Если на 5ом уроке внедрение зависимосте происходило через указание в конфигурационном файле, дополнительно к бину добавлялась
+приписка 
+constructor-arg (если внедрение происходило через конструктор(прописывался в ref="название внедряемого бина")),
+либо через setter
+property name="название сеттера без set" ref="название внедряемого бина"
+
+то теперь достаточно указывать аннотацию @Autowired, как над конструктором и тогда промзведется поиск подходящего бина
+с аннотацией @Component. Либо эту же аннотацию @Component можно указать над setter'ом, и как и в прошлый раз спринг подставит нужный бин произведя
+поиск подходящего бина.
+(по уроку уже пустой конструктор не нужен при внедрении через сеттер, в отличии от прописывания всего в конфиг файле)
+и в отличии от варианта с конфиг файлом, метод может иметь любое название т.к. спрингу достаточно аннотации @Autowired по которой он поймет что здесь необходимо внедрять зависимость.
+
+Парктика__
+
+    @Autowired
+    public MusicPlayer(Music music){
+        this.music = music;
+    }
+
+указал аннотацию над конструктором.(аннотацию компонент оставил только над "классикой").
+
+опять же теперь в мэйне код сократиться 
+
+        Music music = context.getBean("musicBean", Music.class);
+        MusicPlayer musicPlayer = new MusicPlayer(music);
+        musicPlayer.playMusic();
+--->
+        MusicPlayer musicPlayer = context.getBean(MusicPlayer.class);
+        musicPlayer.playMusic();
+
+аналогично 5ому уроку, спринг внедрил класс Music в MusicPlayer.
+
+Так же можно сделать это и через setter 
+
+    @Autowired
+    public void setMusic(Music music) {
+        this.music = music;
+    }
+
+весь остальной код останется таковым же.
+
+И главное есть ещё один вариант внедрение зависимости - это внедрение через поле.
+Аннотация @Autowired указывается над полем. Посольку у Java нет обычных методов для наделения значению приватному полю без конструктора и сеттера,
+ 	то делается это посредством рефлексии(Reflection API)(У Алишева есть курс по ней, скорее всего его стоит пройти)
+
+т.е. в конечном результате класс MusicPlayer будет выглядеть
+
+@Component
+public class MusicPlayer {
+    
+    @Autowired
+    private Music music;
+
+    public void playMusic() {
+        System.out.println("Playing: " + music.getSong());
+    }
+}
+
+даже конструктор уже не нужён! хоох.
+
+----------
+и для примера, покажу внедрения зависимости в зависимость.
+дополнительно создам класс Computer который будет использовать в своем конструкторе MusicPlayer.
+Я добавил анотацию к конструктору
+
+    public Computer(MusicPlayer musicPlayer) {
+        this.id = 1;
+        this.musicPlayer = musicPlayer;
+    }
+
+и при запуске приложения он подбирает подходящие бины
+MusicPlayer'у добавлет бин music(c предыдущего момента установлен по полю).
+
+а в Computer через конструктор дополняется бин musicPlayer.
+
+В мейне по итогу прописывается только компьютер
+        Computer computer = context.getBean(Computer.class);
+        System.out.println(computer);
+Остальное спринг следую сканированию подставляет сам.
+
+
+
+_________Урок 11___продолжение DI c аннотациями
+
+Поскольку подбирается музыка в плеер не отдельно по жанрам, а через интерфейс Music, то подходящих
+бинов(жанров) которые пододут может быть больше, из-за чего возникает ошибка неоднозначности, о чем и скажет 
+спринг при запуске приложения.
+
+(В конфигурационном xml, такого не возникало т.к. там уже изначально всё указывается.) 
+Для решения этой проблемы существует аннотация @Qualifier (уточнить).
+
+И если подходящих бинов больше одного, то к конструктору, сеттеру или полю дополнительно добавляется аннотация
+@Qualifier("название бина").
+
+т.е. к полю  music в MusicPlayer из предыдщуего занятия дополнилось
+
+    @Autowired
+    @Qualifier("classicalMusic")
+    private Music music;
+
+но есть тонкость, если добавлять данную аннотацию в конструктор. вид будет немного другой.
+
+    @Autowired
+    public MusicPlayer(@Qualifier("classicalMusic") Music music1,
+                       @Qualifier("rockMusic") Music music2) {
+        this.music1 = music1;
+        this.music2 = music2;
+    }
+
+т.е. она добавляется перед аргументом.
+
+
+________Урок 12____
+
+В уроке идет прохождение по урокам ранее об установки значений в бин через внешний файл,
+scope(область видимости) и Init и Destroy методах. Но теперь все это делается с помощью аннотаций.
+
+и так по порядку.
+установка значений, ранее в конфиг файле, в бине
+
+    <bean id="musicPlayer"
+            class="com.bmolc.music.MusicPlayer"
+            scope="prototype">
+        <property name="music" ref="musicBean"/>
+
+        <property name="name" value="${musicPlayer.name}"/>
+        <property name="volume" value="${musicPlayer.volume}"/>
+    </bean>
+в пропертях указывались поля и значения(или откуда их брать если это внещний файл. Теперь в 
+конфиг файле как и раньше нужно вновь указать где спрингу брать значения(где находятся пропертя).
+
+    <context:property-placeholder location="classPath:musicPlayer.properties"/>
+
+(полный путь можно не указывать т.к. внешние надстройки находятся в ресурсах)
+и уже значение указывать через аннотацию над необходимыми полями.
+
+    @Value("${musicPlayer.name}")
+    private String name;
+
+    @Value("${musicPlayer.volume}")
+    private int volume;
+
+Scope теперь так же аннотацеий достаточно указать у класса
+@Scope("singleton")
+
+	@Component
+	@Scope("singleton")
+	public class MusicPlayer {
+
+Init и Destroy методы теперь тоже достаточно указать аннотацией в самом классе.
+
+    @PostConstruct
+    public void initMethod() {
+        System.out.println("предбиновый метод отработал!");
+    }
+
+    @PreDestroy
+    public void destroyMethod() {
+        System.out.println("послеюиный метод отработал!");
+    }
+
+
+_______Урок 13____конфигурационный файл чере Java.
+
+Все что прописывалось до этого в xml можно отобразить и отдельном конфигурационном 
+Java классе.
+При чем как и вариант с аннотациями в классах, а в конфиге указать только пути где
+искать бины и пропертя.
+Так и возможен вариант как в самом начале прописывания бинов вручную в конфиг классе.
+
+для начала вариант с аннотациями
+
+во 1ых__ 
+
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context.xsd">
+
+</beans>
+
+вот такому пустому xml эквиваленто будет
+-->
+
+@Configuration
+public class AppConfig {
+}
+
+
+тегу для поиска бинов
+ <context:component-scan base-package="com.bmolc.music"/>
+
+эквивалентом будет аннотация @ComponentScan("путь к папке")
+
+@Configuration
+@ComponentScan("com.bmolc")
+public class AppConfig {
+}
+
+
+и для добавления значений из вне
+из такой строки
+ 	<context:property-placeholder location="classpath:musicPlayer.properties"/>
+
+опть же достаточно будет добавить аннотацию @PropertySource("путь к пропертям")
+
+и тогда эквивалентом xml с предудыщего занятия будет вот такой класс
+
+	@Configuration
+	@ComponentScan("com.bmolc")
+	@PropertySource("classpath:musicPlayer.properties")
+	public class AppConfig {
+	}	
+
+Для того чтобы вытащить из подобного контекста бины, обратиться уже нужно будет не к
+
+	ClassPathXmlApplicationContext context =
+                new ClassPathXmlApplicationContext("applicationContext.xml");
+
+а уже ---->
+	
+	AnnotationConfigApplicationContext context =
+                new AnnotationConfigApplicationContext(AppConfig.class);
+
+И спринг выведет все тоже самое как и урок ранее.
+
+
+____В самом начале на первых уроках я прописывал бины и зависимости вручную, дальше уже это с помощью
+аннотаций отдавалось это спрингу на сканирование. и сейчас конфиг java класс прописан под вариант сканирования спрингом.
+НО поскольку можно прописать всё вручную, это и будет выполняться далее.
+
+в конфигурационном xml файле прописывался бин след.образом
+
+    <bean id="musicBean"
+          class="com.bmolc.music.RockMusic">
+    </bean>
+
+в java эквивалентной ему записью будет
+	
+    @Bean
+    public ClassicalMusic musicBean() {
+        return new ClassicalMusic();
+    }
+
+где аннотацией @Bean помечается создаваемый бин, 
+а название метода есть id бина.
+
+Внедрение так же происходит подстановкой метода в бин
+
+    @Bean
+    public MusicPlayer musicPlayer() {
+        return new MusicPlayer(musicBean());
+    }
+	
+
+вид класса
+
+	@Configuration
+	@PropertySource("classpath:musicPlayer.properties")
+	public class AppConfig {
+
+    		@Bean
+    		public ClassicalMusic classicalMusic() {
+        		return new ClassicalMusic();
+    		}
+
+		    @Bean
+    		public RockMusic rockMusic(){
+        		return new RockMusic();
+    		}
+
+		    @Bean
+    		public MusicPlayer musicPlayer() {
+        		return new MusicPlayer(rockMusic(), classicalMusic());
+    		}
+
+	 	   @Bean
+    		public Computer computer() {
+        		return new Computer(musicPlayer());
+    		}
+	}
+
+да здесь подстановка из внешнего файла по аннотациям, но думаю что можно и поискать овариант с подстановкой.
