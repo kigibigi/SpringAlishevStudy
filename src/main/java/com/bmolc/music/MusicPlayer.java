@@ -7,8 +7,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-@Component
-@Scope("singleton")
 public class MusicPlayer {
 
 //    @Autowired
@@ -32,9 +30,9 @@ public class MusicPlayer {
     @Value("${musicPlayer.volume}")
     private int volume;
 
-    @Autowired
-    public MusicPlayer(@Qualifier("classicalMusic") Music music1,
-                       @Qualifier("rockMusic") Music music2) {
+
+    public MusicPlayer(Music music1,
+                       Music music2) {
         this.music1 = music1;
         this.music2 = music2;
     }
